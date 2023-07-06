@@ -1,6 +1,6 @@
-import { IGame } from '../domain/route'
+import { IGame } from './_types/game'
 
-export interface IGamesRepository {
+export interface IGamesRepositoryOutput {
   getGames({ email }: { email: string }): Promise<IGetGamesResponse>
 }
 

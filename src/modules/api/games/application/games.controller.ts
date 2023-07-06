@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { GamesUseCase } from './games.usecase'
-import { IResponse } from '../domain/route'
+import { IResponse } from '../domain/_types/route'
 
 export class GamesController {
   constructor(private gameUseCase: GamesUseCase) {}

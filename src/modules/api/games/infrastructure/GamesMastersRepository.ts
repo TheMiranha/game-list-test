@@ -1,7 +1,10 @@
 import axios from 'axios'
-import { IGamesRepository, IGetGamesResponse } from '../GamesRepositoy'
+import {
+  IGamesRepositoryOutput,
+  IGetGamesResponse
+} from '../domain/games.repository.outputs'
 
-export class GamesTestRepository implements IGamesRepository {
+export class GamesMastersRepository implements IGamesRepositoryOutput {
   private api
 
   constructor() {
