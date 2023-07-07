@@ -1,5 +1,5 @@
 import { IGamesOutput, IResponse } from '../domain/games.outputs'
-import { IResponse as IBackendResponse } from '@/modules/api/games/domain/route'
+import { IResponse as IBackendResponse } from '@/modules/api/games/domain/_types/route'
 import axios from 'axios'
 
 export class GamesProvider implements IGamesOutput {
