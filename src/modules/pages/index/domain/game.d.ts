@@ -1,3 +1,5 @@
+import { Nullable } from '@/modules/commom/domain/_types/nullable'
+
 export interface IGame {
   id: number
   title: string

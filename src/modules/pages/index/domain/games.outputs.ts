@@ -1,4 +1,4 @@
-import { Messages } from '@/modules/api/games/domain/route'
+import { Messages } from '@/modules/api/games/domain/_types/route'
 import { IGame } from './game'
 
 export interface IGamesOutput {
