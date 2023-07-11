@@ -1,5 +1,4 @@
-import { Button, Card, Input, Spacer } from '@nextui-org/react'
-import { Dispatch, SetStateAction, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { FormViewProps } from './_types/form'
 import { FormStyle } from './form.style'
 
@@ -32,7 +31,14 @@ export const FormView = ({
       error: styleError,
       ...props
     }),
-    []
+    [
+      styleAlreadyRegistered,
+      styleEmail,
+      stylePassword,
+      styleConfirmPassword,
+      styleError,
+      props
+    ]
   )
 
   return <FormStyle {...styleProps} />

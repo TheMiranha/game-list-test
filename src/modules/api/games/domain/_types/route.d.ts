@@ -10,8 +10,6 @@ export interface IPayload {
   email: string
 }
 
-export type Nullable<T> = T | null | undefined
-
 export type HttpStatus = 200 | 500 | 400 | 408
 
 export type Messages =

@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase/app'
+import { getAuth } from 'firebase/auth'
 
 const credentials = {
   apiKey: process.env.NEXT_PUBLIC_API_KEY,
@@ -11,5 +12,6 @@ const credentials = {
 }
 
 const firebase = initializeApp(credentials)
+const auth = getAuth(firebase)
 
-export { firebase }
+export { firebase, auth }

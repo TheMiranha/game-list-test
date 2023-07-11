@@ -1,3 +1,4 @@
+import { AuthenticationContextProvider } from '@/modules/contexts/authentication/application/authentication.context'
 import { NextUIProvider, createTheme } from '@nextui-org/react'
 import type { AppProps } from 'next/app'
 
@@ -12,7 +13,9 @@ const lightTheme = createTheme({
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <NextUIProvider theme={lightTheme}>
-      <Component {...pageProps} />
+      <AuthenticationContextProvider>
+        <Component {...pageProps} />
+      </AuthenticationContextProvider>
     </NextUIProvider>
   )
 }

@@ -1,5 +1,5 @@
 import { Button, Card, Input, Spacer, Text } from '@nextui-org/react'
-import { FormEvent, useCallback, useState } from 'react'
+import { FormEvent, useCallback } from 'react'
 import { FormViewProps } from './_types/form'
 
 export const FormStyle = ({
@@ -16,6 +16,7 @@ export const FormStyle = ({
 }: FormViewProps) => {
   const handleSubmit = useCallback(
     (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault()
       handleLogin()
     },
     [handleLogin]
@@ -46,8 +47,7 @@ export const FormStyle = ({
           <Card.Divider />
           <Card.Body>
             <Input
-              placeholder="Email"
-              color="primary"
+              label="Email"
               type="email"
               css={{ width: '90%' }}
               value={email}
@@ -56,7 +56,7 @@ export const FormStyle = ({
             <Spacer y={1} />
             <Input
               placeholder="Senha"
-              color="primary"
+              label="Senha"
               type="password"
               css={{ width: '90%' }}
               value={password}
@@ -67,7 +67,7 @@ export const FormStyle = ({
                 <Spacer y={1} />
                 <Input
                   placeholder="Confirme sua senha"
-                  color="primary"
+                  label="Confirmar senha"
                   type="password"
                   css={{ width: '90%' }}
                   value={confirmPassword}
@@ -86,12 +86,11 @@ export const FormStyle = ({
               gap: '10px'
             }}
           >
-            <Button css={{ width: '70%' }}>
+            <Button type="submit" css={{ width: '70%' }}>
               {alreadyRegistered ? 'Entrar' : 'Criar conta'}
             </Button>
             <Button
               light
-              color="primary"
               onClick={() => setAlreadyRegistered(!alreadyRegistered)}
               type="button"
             >
