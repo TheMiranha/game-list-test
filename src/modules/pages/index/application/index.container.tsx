@@ -1,48 +1,58 @@
-import { ChangeEvent, useEffect, useMemo, useState } from 'react'
-import { getGames } from '../domain/games.actions'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card'
+import { IRate } from '@/modules/commom/domain/_types/rate'
+import { useAuthentication } from '@/modules/contexts/authentication/application/authentication.context'
+import { useEffect, useMemo, useState } from 'react'
 import { config } from '../config/base'
 import { IGame } from '../domain/game'
-import {
-  Button,
-  Card,
-  Dropdown,
-  FormElement,
-  Grid,
-  Input,
-  Row,
-  Text
-} from '@nextui-org/react'
-import { ServerErrorContainer } from './server-error/server-error.container'
-import { LoaderContainer } from '@/modules/commom/domain/application/loader/loader.container'
-import { Heart } from '../icons/heart'
-import { Star } from '../icons/star'
-import { useAuthentication } from '@/modules/contexts/authentication/application/authentication.context'
-import { getRates, rateGame } from '../domain/rate.actions'
-import { useRouter } from 'next/router'
-import { IRate } from '@/modules/commom/domain/_types/rate'
+import { getGames } from '../domain/games.actions'
+import { getRates } from '../domain/rate.actions'
+import { FiltersContainer } from './filters/filters.container'
+import { GameListContainer } from './gameList/gameList.container'
+import { NavbarContainer } from './navbar/navbar.container'
+import { QuickSearchContainer } from './quickSearch/quickSearch.container'
+import { SearchContainer } from './search/search.container'
+import { SelectedGameContainer } from './selectedGame/selectedGame.container'
 
 export const IndexContainer = () => {
-  const [loading, setLoading] = useState(true)
-  const [games, setGames] = useState<IGame[]>([])
-  const [search, setSearch] = useState<string>('')
-  const [genre, setGenre] = useState<string>('Todos')
+  const [allGames, setAllGames] = useState<IGame[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string>('')
   const [rates, setRates] = useState<IRate[]>([])
+  const [selectedGame, setSelectedGame] = useState<IGame | null>(null)
+  const [selectedGenre, setSelectedGenre] = useState<string>('')
+  const [openFilters, setOpenFilters] = useState<boolean>(false)
+  const [sortType, setSortType] = useState<'stars' | 'alphabetical'>('stars')
+  const [onlyLiked, setOnlyLiked] = useState<boolean>(false)
+  const [reverseSort, setReverseSort] = useState<boolean>(false)
+  const [openQuickSearch, setOpenQuickSearch] = useState<boolean>(false)
+  const [search, setSearch] = useState<string>('')
 
   const { userData } = useAuthentication()
-  const { push } = useRouter()
 
   useEffect(() => {
-    loadRates()
-    loadGames()
+    loadAllGames()
+  }, [])
+
+  useEffect(() => {
+    if (userData != null) {
+      loadRates()
+    }
   }, [userData])
 
-  const loadGames = async () => {
+  const loadAllGames = async () => {
+    setLoading(true)
     const response = await getGames({
       gamesOutput: config.gamesProvider
     })
     if (response.data) {
-      setGames(response.data)
+      setAllGames(response.data)
     } else {
       setError(response.message)
     }
@@ -50,255 +60,149 @@ export const IndexContainer = () => {
   }
 
   const loadRates = async () => {
-    if (userData != null) {
-      const response = await getRates({
-        token: userData.token,
-        rateOutput: config.rateProvider
-      })
-      setRates(response)
-    }
-  }
-
-  const visibleGames = useMemo(() => {
-    let filter = games.filter(game => {
-      return game.title.toLowerCase().includes(search.toLowerCase())
+    const response = await getRates({
+      rateOutput: config.rateProvider,
+      token: userData.token
     })
-    if (genre.length > 0) {
-      filter = filter.filter(game => game.genre === genre || genre == 'Todos')
-    }
-    return filter
-  }, [search, games, genre])
-
-  const allGenres = useMemo(() => {
-    let genres = games.map(game => game.genre)
-    genres = genres.filter((genre, index) => genres.indexOf(genre) === index)
-    let all = ['Todos']
-    all.push(...genres)
-    return all
-  }, [games])
-
-  const handleSearchChange = (e: ChangeEvent<FormElement>) => {
-    setSearch(e.target.value)
+    setRates(response)
   }
 
-  const handleLike = async (gameId: number) => {
-    if (userData != null) {
-      const like = !rates.find(rate => rate.gameId == gameId)?.like
-      const stars = rates.find(rate => rate.gameId == gameId)?.stars || 0
-      await rateGame({
-        gameId,
-        like,
-        stars: stars,
-        token: userData.token,
-        rateOutput: config.rateProvider
+  const allGenres = useMemo<string[]>(() => {
+    const genres: string[] = []
+    allGames.forEach(game => {
+      if (genres.find(genre => genre == game.genre) == undefined) {
+        genres.push(game.genre)
+      }
+    })
+    return genres
+  }, [allGames])
+
+  const visibleGames = useMemo<IGame[]>(() => {
+    var games = [...allGames]
+    if (selectedGenre.length > 0) {
+      games = games.filter(game => game.genre === selectedGenre)
+    }
+    if (sortType == 'stars') {
+      let liked = games.filter(game =>
+        rates.find(rate => rate.gameId == game.id)
+      )
+      liked = liked.sort((a, b) => {
+        const rateA = rates.find(r => r.gameId == a.id)
+        const rateB = rates.find(r => r.gameId == b.id)
+        return (rateA?.stars || 0) > (rateB?.stars || 0) ? -1 : 1
       })
-      loadRates()
-    } else {
-      push('/auth')
-    }
-  }
-
-  const handleStars = async (gameId: number, stars: number) => {
-    if (userData != null) {
-      const like = rates.find(rate => rate.gameId == gameId)?.like || false
-      const currentStars = rates.find(rate => rate.gameId == gameId)?.stars || 0
-      await rateGame({
-        gameId,
-        like,
-        stars: stars == currentStars ? 0 : stars,
-        token: userData.token,
-        rateOutput: config.rateProvider
+      if (reverseSort) {
+        liked = liked.reverse()
+      }
+      allGames.forEach(game => {
+        if (liked.find(a => a.id == game.id) == undefined) {
+          liked.push(game)
+        }
       })
-      loadRates()
+      games = liked
     } else {
-      push('/auth')
+      games = games.sort((a, b) => (a.title > b.title ? 1 : -1))
+      if (reverseSort) {
+        games = games.reverse()
+      }
     }
-  }
+    if (onlyLiked) {
+      games = games.filter(game =>
+        rates.find(rate => rate.gameId == game.id && rate.like)
+      )
+    }
+    if (search.length > 0) {
+      games = games.filter(game =>
+        game.title.toLowerCase().includes(search.toLowerCase())
+      )
+    }
+    return games
+  }, [allGames, selectedGenre, rates, sortType, reverseSort, onlyLiked, search])
 
   if (loading) {
-    return <LoaderContainer />
+    return (
+      <div
+        className="h-[100dvh] w-screen flex items-center justify-center"
+        id="loader_container"
+      >
+        <svg
+          aria-hidden="true"
+          className="w-16 h-16 mr-2 text-gray-200 animate-spin dark:text-gray-600 fill-slate-900"
+          viewBox="0 0 100 101"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+            fill="currentColor"
+          />
+          <path
+            d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+            fill="currentFill"
+          />
+        </svg>
+      </div>
+    )
   }
 
   if (error.length > 0) {
-    return <ServerErrorContainer error={error} />
+    return (
+      <div className="h-[100dvh] w-screen grid place-items-center">
+        <Card>
+          <CardHeader>
+            <CardTitle>Ocorreu um erro...</CardTitle>
+            <CardDescription>{error}</CardDescription>
+          </CardHeader>
+          <CardFooter>
+            <Button onClick={() => window.location.reload()}>Recarregar</Button>
+          </CardFooter>
+        </Card>
+      </div>
+    )
   }
 
   return (
-    <div
-      style={{
-        width: '100vw',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        paddingTop: '50px'
-      }}
-    >
-      <div
-        style={{
-          width: '800px',
-          maxWidth: '98vw',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center'
-        }}
-      >
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <Input
-            value={search}
-            onChange={handleSearchChange}
-            clearable
-            underlined
-            labelPlaceholder="Pesquisa"
-          />
-          <Dropdown>
-            <Dropdown.Button flat color="secondary">
-              Generos
-            </Dropdown.Button>
-            <Dropdown.Menu
-              color="secondary"
-              aria-label="Gêneros"
-              css={{ $$dropdownMenuWidth: '280px' }}
-              selectionMode="single"
-              selectedKeys={[genre]}
-              disallowEmptySelection
-              onSelectionChange={e => {
-                setGenre(Array.from(e)[0]?.toString() || genre)
-              }}
-            >
-              {allGenres.map(genre => (
-                <Dropdown.Item key={genre} textValue={genre}>
-                  {genre}
-                </Dropdown.Item>
-              ))}
-            </Dropdown.Menu>
-          </Dropdown>
-        </div>
-        <Cards
-          games={visibleGames}
-          rates={rates}
-          handleLike={handleLike}
-          handleStars={handleStars}
-        />
-      </div>
+    <div className="flex flex-col items-center">
+      <NavbarContainer />
+      <SearchContainer
+        search={search}
+        setSearch={setSearch}
+        setOpenFilters={setOpenFilters}
+        setOpenQuickSearch={setOpenQuickSearch}
+      />
+      <GameListContainer
+        setSelectedGame={setSelectedGame}
+        rates={rates}
+        games={visibleGames}
+        setRates={setRates}
+      />
+      <SelectedGameContainer
+        open={selectedGame != null}
+        setOpen={(e: boolean) => (e ? false : setSelectedGame(null))}
+        game={selectedGame}
+        rate={rates.find(rate => rate.gameId == selectedGame?.id) || null}
+        setRates={setRates}
+      />
+      <QuickSearchContainer
+        setSelectedGame={setSelectedGame}
+        games={allGames}
+        rates={rates}
+        openQuickSearch={openQuickSearch}
+        setOpenQuickSearch={setOpenQuickSearch}
+      />
+      <FiltersContainer
+        selectedGenre={selectedGenre}
+        setSelectedGenre={setSelectedGenre}
+        allGenres={allGenres}
+        open={openFilters}
+        setOpen={setOpenFilters}
+        sortType={sortType}
+        setSortType={setSortType}
+        onlyLiked={onlyLiked}
+        setOnlyLiked={setOnlyLiked}
+        reverseSort={reverseSort}
+        setReverseSort={setReverseSort}
+      />
     </div>
-  )
-}
-
-const Stars = ({
-  gameId,
-  number,
-  handleStars
-}: {
-  gameId: number
-  number: number
-  handleStars: (gameId: number, stars: number) => void
-}) => {
-  const arr = new Array(5).fill(0)
-
-  return (
-    <>
-      {arr.map((_, n) => {
-        if (n < number) {
-          return (
-            <Star
-              onClick={() => {
-                handleStars(gameId, n + 1)
-              }}
-              solid
-              key={`${n}`}
-            />
-          )
-        } else {
-          return (
-            <Star
-              onClick={() => {
-                handleStars(gameId, n + 1)
-              }}
-              key={`${n}`}
-            />
-          )
-        }
-      })}
-    </>
-  )
-}
-
-const Cards = ({
-  games,
-  rates,
-  handleLike,
-  handleStars
-}: {
-  games: IGame[]
-  rates: IRate[]
-  handleLike: (gameId: number) => void
-  handleStars: (gameId: number, stars: number) => void
-}) => {
-  return (
-    <Grid.Container gap={3} style={{ width: '100%' }}>
-      {games.map(game => (
-        <Grid
-          xs={12}
-          sm={4}
-          key={`${game.id}`}
-          alignContent="center"
-          justify="center"
-        >
-          <Card isHoverable>
-            <Card.Header>
-              <Text
-                css={{
-                  color: '$accents7',
-                  fontWeight: '$semibold',
-                  fontSize: '$sm'
-                }}
-              >
-                {game.genre}
-              </Text>
-            </Card.Header>
-            <Card.Body css={{ p: 0 }}>
-              <Card.Image
-                src={game.thumbnail}
-                objectFit="cover"
-                width="100%"
-                height={140}
-                alt={game.title}
-              />
-            </Card.Body>
-            <Card.Footer css={{ justifyItems: 'flex-start' }}>
-              <Row wrap="wrap" justify="space-between" align="center">
-                <Text b>{game.title}</Text>
-              </Row>
-            </Card.Footer>
-            <Card.Divider />
-            <Card.Footer css={{ justifyItems: 'flex-start' }}>
-              <Row wrap="wrap" justify="space-between" align="center">
-                <Text b>
-                  <Button
-                    light
-                    auto
-                    color="error"
-                    onClick={() => handleLike(game.id)}
-                  >
-                    <Heart
-                      solid={rates.find(rate => rate.gameId == game.id)?.like}
-                    />
-                  </Button>
-                </Text>
-                <Text b>
-                  <Stars
-                    handleStars={handleStars}
-                    gameId={game.id}
-                    number={
-                      rates.find(rate => rate.gameId == game.id)?.stars || 0
-                    }
-                  />
-                </Text>
-              </Row>
-            </Card.Footer>
-          </Card>
-        </Grid>
-      ))}
-    </Grid.Container>
   )
 }
