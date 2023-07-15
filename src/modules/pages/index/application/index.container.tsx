@@ -79,6 +79,7 @@ export const IndexContainer = () => {
 
   const visibleGames = useMemo<IGame[]>(() => {
     var games = [...allGames]
+
     if (selectedGenre.length > 0) {
       games = games.filter(game => game.genre === selectedGenre)
     }
@@ -94,7 +95,7 @@ export const IndexContainer = () => {
       if (reverseSort) {
         liked = liked.reverse()
       }
-      allGames.forEach(game => {
+      games.forEach(game => {
         if (liked.find(a => a.id == game.id) == undefined) {
           liked.push(game)
         }
