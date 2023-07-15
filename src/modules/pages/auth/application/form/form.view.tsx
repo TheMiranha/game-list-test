@@ -1,45 +1,106 @@
-import { useMemo } from 'react'
-import { FormViewProps } from './_types/form'
-import { FormStyle } from './form.style'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+
+export interface IFormViewProps {
+  email: string
+  password: string
+  confirmPassword: string
+  setEmail: (e: string) => void
+  setPassword: (e: string) => void
+  setConfirmPassword: (e: string) => void
+  handleCreateAccount: () => void
+  handleSignIn: () => void
+}
 
 export const FormView = ({
-  alreadyRegistered,
   email,
   password,
   confirmPassword,
-  error,
-  ...props
-}: FormViewProps) => {
-  const styleAlreadyRegistered = useMemo(
-    () => alreadyRegistered || false,
-    [alreadyRegistered]
+  setEmail,
+  setPassword,
+  setConfirmPassword,
+  handleSignIn,
+  handleCreateAccount
+}: IFormViewProps) => {
+  return (
+    <div className="h-[100dvh] w-screen flex items-center justify-center">
+      <Tabs defaultValue="signin" className="w-3/4 md:w-[480px]">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="signin">Entrar</TabsTrigger>
+          <TabsTrigger value="signup">Criar conta</TabsTrigger>
+        </TabsList>
+        <TabsContent value="signin">
+          <Card>
+            <CardHeader>
+              <CardTitle>Autenticação</CardTitle>
+              <CardDescription>
+                Insira suas credenciais para entrar
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <Input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                name="email"
+              />
+              <Input
+                type="password"
+                placeholder="Senha"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                name="password"
+              />
+            </CardContent>
+            <CardFooter className="flex flex-col gap-4 items-end">
+              <Button onClick={() => handleSignIn()}>Entrar</Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+        <TabsContent value="signup">
+          <Card>
+            <CardHeader>
+              <CardTitle>Autenticação</CardTitle>
+              <CardDescription>
+                Insira suas credenciais para criar sua conta
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <Input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+              />
+              <Input
+                type="password"
+                placeholder="Senha"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+              />
+              <Input
+                type="password"
+                placeholder="Confirme sua senha"
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+              />
+            </CardContent>
+            <CardFooter className="flex flex-col gap-4 items-end">
+              <Button onClick={() => handleCreateAccount()}>Criar conta</Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   )
-  const styleEmail = useMemo(() => email || '', [email])
-  const stylePassword = useMemo(() => password || '', [password])
-  const styleError = useMemo(() => error || '', [error])
-  const styleConfirmPassword = useMemo(
-    () => confirmPassword || '',
-    [confirmPassword]
-  )
-
-  const styleProps = useMemo<FormViewProps>(
-    () => ({
-      alreadyRegistered: styleAlreadyRegistered,
-      email: styleEmail,
-      password: stylePassword,
-      confirmPassword: styleConfirmPassword,
-      error: styleError,
-      ...props
-    }),
-    [
-      styleAlreadyRegistered,
-      styleEmail,
-      stylePassword,
-      styleConfirmPassword,
-      styleError,
-      props
-    ]
-  )
-
-  return <FormStyle {...styleProps} />
 }

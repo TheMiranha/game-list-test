@@ -1,6 +1,7 @@
 import {
   createUserWithEmailAndPassword,
-  signInWithEmailAndPassword
+  signInWithEmailAndPassword,
+  signOut
 } from 'firebase/auth'
 import { auth } from './Firebase'
 
@@ -46,6 +47,10 @@ export const CreateUser = ({
         message: error.code
       }
     })
+}
+
+export const SignOut = async () => {
+  await signOut(auth)
 }
 
 interface IResponseType {
