@@ -4,7 +4,9 @@ import { getAuth } from 'firebase-admin/auth'
 
 const credentials = {
   clientEmail: process.env.BFF_CLIENT_EMAIL,
-  privateKey: process.env.BFF_PRIVATE_KEY,
+  privateKey: process.env.BFF_PRIVATE_KEY
+    ? process.env.BFF_PRIVATE_KEY.replace(/\\n/gm, '\n')
+    : undefined,
   projectId: process.env.BFF_PROJECT_ID
 }
 
