@@ -6,7 +6,7 @@ const credentials = {
   clientEmail: process.env.BFF_CLIENT_EMAIL,
   privateKey: process.env.BFF_PRIVATE_KEY
     ? JSON.parse(process.env.BFF_PRIVATE_KEY).privateKey
-    : 'nao encontrada',
+    : undefined,
   projectId: process.env.BFF_PROJECT_ID
 }
 
